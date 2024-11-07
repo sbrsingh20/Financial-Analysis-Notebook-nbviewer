@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import streamlit as st
 from pandas import ExcelWriter
+import io
 
 # Set style for seaborn and matplotlib
 sns.set(style="whitegrid")
@@ -99,25 +100,37 @@ if uploaded_files:
         plt.ylabel("Metric Averages")
         plt.xticks(rotation=45)
         plt.tight_layout()
-        plt.savefig("financial_metric_comparison.png")
+        
+        # Save the plot to a buffer
+        buf = io.BytesIO()
+        plt.savefig(buf, format="png")
         plt.close()
+        buf.seek(0)
 
         # Show the plot in the Streamlit app
         st.subheader("Comparison of Key Financial Metrics")
-        img = plt.imread('financial_metric_comparison.png')
-        st.image(img)
+        st.image(buf)
 
-        # Provide download link for the Excel file
-        output_file = "financial_comparison_analysis.xlsx"
-        with ExcelWriter(output_file) as writer:
+        # Prepare the Excel file in memory
+        output = io.BytesIO()
+        with ExcelWriter(output, engine='xlsxwriter') as writer:
             for sheet_name, df in all_profit_data.items():
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
             for sheet_name, df in all_growth_data.items():
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
             comparative_df.to_excel(writer, sheet_name="Comparative Metrics", index=False)
 
-        st.success(f"Analysis complete. Results saved to {output_file}.")
-        st.markdown(f"[Download Excel File]({output_file})")
+        output.seek(0)
+
+        # Provide download button for the Excel file
+        st.download_button(
+            label="Download Results as Excel File",
+            data=output,
+            file_name="financial_comparison_analysis.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+        st.success("Analysis complete. You can download the results.")
     except Exception as e:
         st.error(f"Error executing the code: {str(e)}")
 else:
