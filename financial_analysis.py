@@ -31,12 +31,18 @@ def profitability_analysis(df):
     df['Gross Margin'] = (df['Total Revenue/Income'] - df['Total Operating Expense']) / df['Total Revenue/Income'] * 100
     df['Operating Margin'] = df['Operating Income/Profit'] / df['Total Revenue/Income'] * 100
     df['Net Profit Margin'] = df['Net Income'] / df['Total Revenue/Income'] * 100
-    return df[['Date', 'Gross Margin', 'Operating Margin', 'Net Profit Margin']]
+    df['EBITDA Margin'] = df['EBITDA'] / df['Total Revenue/Income'] * 100
+    return df[['Date', 'Gross Margin', 'Operating Margin', 'Net Profit Margin', 'EBITDA Margin']]
 
 def growth_analysis(df):
     df['Revenue Growth'] = df['Total Revenue/Income'].pct_change() * 100
     df['Net Income Growth'] = df['Net Income'].pct_change() * 100
-    return df[['Date', 'Revenue Growth', 'Net Income Growth']]
+    df['EPS Growth'] = df['EPS (Earning Per Share)'].pct_change() * 100
+    return df[['Date', 'Revenue Growth', 'Net Income Growth', 'EPS Growth']]
+
+def additional_analysis(df):
+    df['Effective Tax Rate'] = (df['Income/Profit Before Tax'] - df['Net Income']) / df['Income/Profit Before Tax'] * 100
+    return df[['Date', 'Effective Tax Rate']]
 """
 
 # File upload section
@@ -67,6 +73,7 @@ if uploaded_files:
             # Perform analyses
             profit_data = profitability_analysis(data)
             growth_data = growth_analysis(data)
+            additional_data = additional_analysis(data)
 
             # Add file identifier
             file_id = uploaded_file.name.split('.')[0]
@@ -80,8 +87,11 @@ if uploaded_files:
                 "Avg Gross Margin": profit_data['Gross Margin'].mean(),
                 "Avg Operating Margin": profit_data['Operating Margin'].mean(),
                 "Avg Net Profit Margin": profit_data['Net Profit Margin'].mean(),
+                "Avg EBITDA Margin": profit_data['EBITDA Margin'].mean(),
                 "Avg Revenue Growth": growth_data['Revenue Growth'].mean(),
-                "Avg Net Income Growth": growth_data['Net Income Growth'].mean()
+                "Avg Net Income Growth": growth_data['Net Income Growth'].mean(),
+                "Avg EPS Growth": growth_data['EPS Growth'].mean(),
+                "Avg Effective Tax Rate": additional_data['Effective Tax Rate'].mean()
             }
 
         # Convert comparative metrics to DataFrame
